@@ -4,13 +4,25 @@ async function carregarProdutosAutomaticos() {
 
   try {
 
-    container.innerHTML = "<p>Carregando promoções...</p>";
+    container.innerHTML = `
+      <p>Carregando promoções...</p>
+    `;
 
-    const resposta = await fetch("/api/produtos-publicos");
+    const resposta = await fetch("/produtos.json");
 
     const produtos = await resposta.json();
 
     container.innerHTML = "";
+
+    if (!produtos.length) {
+
+      container.innerHTML = `
+        <p>Nenhuma promoção cadastrada ainda.</p>
+      `;
+
+      return;
+
+    }
 
     produtos.forEach((produto) => {
 
@@ -20,20 +32,23 @@ async function carregarProdutosAutomaticos() {
 
       card.innerHTML = `
         <div class="discount">
-          ${produto.desconto}
+          ${produto.desconto || "Oferta"}
         </div>
 
         <div class="product-img">
-          <img src="${produto.imagem}" alt="${produto.titulo}">
+          <img
+            src="${produto.imagem}"
+            alt="${produto.titulo}"
+          >
         </div>
 
-        <small>${produto.loja}</small>
+        <small>
+          ${produto.loja || "Mercado Livre"}
+        </small>
 
-        <h3>${produto.titulo}</h3>
-
-        <p class="old-price">
-          ${produto.categoria}
-        </p>
+        <h3>
+          ${produto.titulo}
+        </h3>
 
         <p class="price">
           ${produto.preco}
@@ -60,8 +75,9 @@ async function carregarProdutosAutomaticos() {
       erro
     );
 
-    container.innerHTML =
-      "<p>Não foi possível carregar as promoções agora.</p>";
+    container.innerHTML = `
+      <p>Erro ao carregar promoções.</p>
+    `;
 
   }
 
