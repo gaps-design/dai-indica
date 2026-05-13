@@ -1,136 +1,79 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel Admin | Daí Indica</title>
+<input id="titulo" placeholder="Título do produto">
+<input id="preco" placeholder="Preço. Ex: R$ 1.299,00">
+<input id="imagem" placeholder="Link da imagem">
+<input id="link" placeholder="Link do produto / afiliado">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fff6f3;
-      color: #2b1b1b;
-      padding: 40px;
-    }
+<select id="loja">
+  <option value="mercado-livre">Mercado Livre</option>
+  <option value="shopee">Shopee</option>
+  <option value="magalu">Magalu</option>
+  <option value="natura">Natura</option>
+  <option value="boticario">O Boticário</option>
+</select>
 
-    .box {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    }
+<select id="categoria">
+  <option value="tecnologia">Tecnologia</option>
+  <option value="casa">Casa</option>
+  <option value="beleza">Beleza</option>
+  <option value="moda">Moda</option>
+  <option value="infantil">Infantil</option>
+  <option value="mercado">Mercado</option>
+</select>
 
-    h1 {
-      color: #d94f64;
-      margin-bottom: 10px;
-    }
+<input id="desconto" placeholder="Ex: Oferta, -30%, Promoção">
+<label>
+  <input type="checkbox" id="destaque" checked>
+  Aparecer na página inicial
+</label>
 
-    p {
-      color: #6d4b4b;
-    }
+<button onclick="gerarJSON()">Gerar JSON</button>
 
-    input, button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 16px;
-    }
+<textarea id="resultado" rows="14"></textarea>
 
-    button {
-      background: linear-gradient(135deg, #e64f69, #f5a623);
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      border: none;
-    }
+<script>
+function nomeLoja(slug) {
+  const lojas = {
+    "mercado-livre": "Mercado Livre",
+    "shopee": "Shopee",
+    "magalu": "Magalu",
+    "natura": "Natura",
+    "boticario": "O Boticário"
+  };
 
-    .resultado {
-      margin-top: 25px;
-      padding: 20px;
-      background: #fff1f3;
-      border-radius: 16px;
-      display: none;
-    }
+  return lojas[slug] || slug;
+}
 
-    .resultado img {
-      max-width: 180px;
-      border-radius: 12px;
-      margin-top: 12px;
-    }
+function nomeCategoria(slug) {
+  const categorias = {
+    "tecnologia": "Tecnologia",
+    "casa": "Casa",
+    "beleza": "Beleza",
+    "moda": "Moda",
+    "infantil": "Infantil",
+    "mercado": "Mercado"
+  };
 
-    .erro {
-      color: red;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-  </style>
-</head>
+  return categorias[slug] || slug;
+}
 
-<body>
+function gerarJSON() {
+  const lojaSlug = document.getElementById("loja").value;
+  const categoriaSlug = document.getElementById("categoria").value;
 
-  <div class="box">
-    <h1>Painel Daí Indica</h1>
-    <p>Cole o link do Mercado Livre para gerar o card automático.</p>
+  const produto = {
+    titulo: document.getElementById("titulo").value,
+    preco: document.getElementById("preco").value,
+    imagem: document.getElementById("imagem").value,
+    link: document.getElementById("link").value,
+    loja: nomeLoja(lojaSlug),
+    lojaSlug: lojaSlug,
+    categoria: nomeCategoria(categoriaSlug),
+    categoriaSlug: categoriaSlug,
+    desconto: document.getElementById("desconto").value || "Oferta",
+    destaque: document.getElementById("destaque").checked
+  };
 
-    <input
-      type="text"
-      id="linkProduto"
-      placeholder="Cole aqui o link do Mercado Livre"
-    />
-
-    <button onclick="gerarProduto()">Gerar produto</button>
-
-    <div id="erro" class="erro"></div>
-
-    <div id="resultado" class="resultado">
-      <h2 id="titulo"></h2>
-      <p><strong>Preço:</strong> <span id="preco"></span></p>
-      <p><strong>Loja:</strong> Mercado Livre</p>
-      <img id="imagem" src="" alt="Produto" />
-      <br><br>
-      <a id="linkFinal" href="#" target="_blank">Abrir oferta</a>
-    </div>
-  </div>
-
-  <script>
-    async function gerarProduto() {
-      const link = document.getElementById("linkProduto").value;
-      const erro = document.getElementById("erro");
-      const resultado = document.getElementById("resultado");
-
-      erro.innerText = "";
-      resultado.style.display = "none";
-
-      if (!link) {
-        erro.innerText = "Cole um link primeiro.";
-        return;
-      }
-
-      try {
-        const resposta = await fetch(`/api/gerar-produto?url=${encodeURIComponent(link)}`);
-        const produto = await resposta.json();
-
-        if (produto.erro) {
-          erro.innerText = produto.mensagem || "Erro ao gerar produto.";
-          return;
-        }
-
-        document.getElementById("titulo").innerText = produto.titulo;
-        document.getElementById("preco").innerText = produto.preco;
-        document.getElementById("imagem").src = produto.imagem;
-        document.getElementById("linkFinal").href = produto.link;
-
-        resultado.style.display = "block";
-
-      } catch (e) {
-        erro.innerText = "Erro ao conectar com o servidor.";
-      }
-    }
-  </script>
-
-</body>
-</html>
+  document.getElementById("resultado").value =
+    JSON.stringify(produto, null, 2);
+}
+</script>
