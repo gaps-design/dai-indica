@@ -1,97 +1,67 @@
 const container = document.querySelector(".products");
 
-const buscas = [
-  "creatina",
-  "garrafa termica",
-  "fone bluetooth",
-  "moda feminina",
-  "beleza feminina"
-];
-
-function formatarPreco(valor) {
-  return Number(valor || 0).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
 async function carregarProdutosAutomaticos() {
 
   try {
 
     container.innerHTML = "<p>Carregando promoções...</p>";
 
-    let htmlProdutos = "";
+    const resposta = await fetch("/api/produtos-publicos");
 
-    for (const termo of buscas) {
+    const produtos = await resposta.json();
 
-      const url =
-        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=5`;
+    container.innerHTML = "";
 
-      const resposta = await fetch(url);
+    produtos.forEach((produto) => {
 
-      const dados = await resposta.json();
+      const card = document.createElement("div");
 
-      if (dados.results) {
+      card.className = "product-card";
 
-        dados.results.forEach((produto) => {
+      card.innerHTML = `
+        <div class="discount">
+          ${produto.desconto}
+        </div>
 
-          htmlProdutos += `
+        <div class="product-img">
+          <img src="${produto.imagem}" alt="${produto.titulo}">
+        </div>
 
-            <div class="product-card">
+        <small>${produto.loja}</small>
 
-              <div class="discount">
-                Oferta
-              </div>
+        <h3>${produto.titulo}</h3>
 
-              <div class="product-img">
-                <img src="${produto.thumbnail}" alt="${produto.title}">
-              </div>
+        <p class="old-price">
+          ${produto.categoria}
+        </p>
 
-              <small>
-                Mercado Livre
-              </small>
+        <p class="price">
+          ${produto.preco}
+        </p>
 
-              <h3>
-                ${produto.title}
-              </h3>
+        <a
+          href="${produto.link}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-product"
+        >
+          Comprar agora
+        </a>
+      `;
 
-              <p class="old-price">
-                ${termo}
-              </p>
+      container.appendChild(card);
 
-              <p class="price">
-                ${formatarPreco(produto.price)}
-              </p>
-
-              <a
-                href="${produto.permalink}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-product"
-              >
-                Comprar agora
-              </a>
-
-            </div>
-
-          `;
-
-        });
-
-      }
-
-    }
-
-    container.innerHTML = htmlProdutos;
+    });
 
   } catch (erro) {
 
-    console.error("Erro ao carregar produtos:", erro);
+    console.error(
+      "Erro ao carregar produtos:",
+      erro
+    );
 
-    container.innerHTML = `
-      <p>Não foi possível carregar as promoções agora.</p>
-    `;
+    container.innerHTML =
+      "<p>Não foi possível carregar as promoções agora.</p>";
 
   }
 
