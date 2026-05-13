@@ -1,14 +1,16 @@
 [ 
+  
   {
-  "titulo": "",
-  "preco": "R$1299,00",
-  "imagem": "https://produto.mercadolivre.com.br/MLB-6310097450",
-  "link": "https://produto.mercadolivre.com.br/MLB-6310097450",
-  "loja": "Mercado Livre",
-  "lojaSlug": "mercado-livre",
-  "categoria": "Tecnologia",
-  "categoriaSlug": "tecnologia",
-  "desconto": "-30",
-  "destaque": true
-}
+    "titulo": "Samsung Galaxy A07 256GB 8GB RAM Verde",
+    "preco": "R$ 1299,00",
+    "imagem": "https://http2.mlstatic.com/D_NQ_NP_2X_857155-MLA85210378646_052025-F.webp",
+    "link": "https://produto.mercadolivre.com.br/MLB-6310097450",
+    "loja": "Mercado Livre",
+    "lojaSlug": "mercado-livre",
+    "categoria": "Tecnologia",
+    "categoriaSlug": "tecnologia",
+    "desconto": "-30%",
+    "destaque": true
+  }
+
 ]
