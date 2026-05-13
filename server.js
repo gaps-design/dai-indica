@@ -3,288 +3,131 @@ const axios = require("axios");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const cheerio = require("cheerio");
 
 const app = express();
-
 const PORT = process.env.PORT || 10000;
-
-/* =========================
-   CONFIG ML
-========================= */
-
-const CLIENT_ID = "2373219788729324";
-
-const CLIENT_SECRET =
-  process.env.ML_CLIENT_SECRET;
-
-const REDIRECT_URI =
-  "https://www.daiindica.com.br/callback";
-
-/* =========================
-   VARIÁVEIS
-========================= */
-
-let accessToken = "";
-let refreshToken = "";
-
-/* =========================
-   MIDDLEWARE
-========================= */
+const caminhoProdutos = path.join(__dirname, "produtos.json");
 
 app.use(cors());
-
 app.use(express.json());
-
 app.use(express.static(__dirname));
 
-/* =========================
-   HOME
-========================= */
-
-app.get("/", (req, res) => {
-
-  res.sendFile(
-    path.join(__dirname, "index.html")
-  );
-
-});
-
-/* =========================
-   LOGIN ML
-========================= */
-
-app.get("/login", (req, res) => {
-
-  const authUrl =
-    `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-
-  res.redirect(authUrl);
-
-});
-
-/* =========================
-   CALLBACK
-========================= */
-
-app.get("/callback", async (req, res) => {
-
-  const code = req.query.code;
-
-  try {
-
-    const response = await axios.post(
-      "https://api.mercadolibre.com/oauth/token",
-      {
-        grant_type: "authorization_code",
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        code,
-        redirect_uri: REDIRECT_URI
-      },
-      {
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json"
-        }
-      }
-    );
-
-    accessToken = response.data.access_token;
-
-    refreshToken = response.data.refresh_token;
-
-    res.send(`
-      <h1>Autorizado com sucesso ✅</h1>
-      <p>Agora volte para <a href="/admin.html">admin.html</a></p>
-    `);
-
-  } catch (erro) {
-
-    console.log(
-      erro.response?.data || erro.message
-    );
-
-    res.send("Erro ao autenticar.");
-
-  }
-
-});
-
-/* =========================
-   EXTRAIR ITEM ID
-========================= */
-
-function extrairItemId(url) {
-
-  const regex = /MLB[-]?\d+/i;
-
-  const resultado = url.match(regex);
-
-  if (!resultado) return null;
-
-  return resultado[0].replace("-", "");
-
+function lerProdutos() {
+  if (!fs.existsSync(caminhoProdutos)) fs.writeFileSync(caminhoProdutos, "[]");
+  return JSON.parse(fs.readFileSync(caminhoProdutos, "utf8") || "[]");
 }
 
-/* =========================
-   GERAR PRODUTO
-========================= */
+function salvarProdutos(produtos) {
+  fs.writeFileSync(caminhoProdutos, JSON.stringify(produtos, null, 2));
+}
 
-app.get("/api/gerar-produto", async (req, res) => {
+function nomeLoja(slug) {
+  const lojas = {
+    "mercado-livre": "Mercado Livre",
+    "shopee": "Shopee",
+    "magalu": "Magalu",
+    "amazon": "Amazon",
+    "natura": "Natura",
+    "boticario": "O Boticário"
+  };
+  return lojas[slug] || slug;
+}
 
-  try {
+function nomeCategoria(slug) {
+  const categorias = {
+    "tecnologia": "Tecnologia",
+    "casa": "Casa",
+    "beleza": "Beleza",
+    "moda": "Moda",
+    "infantil": "Infantil",
+    "mercado": "Mercado"
+  };
+  return categorias[slug] || slug;
+}
 
-    if (!accessToken) {
-
-      return res.json({
-        erro: true,
-        mensagem:
-          "Faça login primeiro em /login"
-      });
-
+async function extrairDadosDoLink(url) {
+  const response = await axios.get(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0"
     }
+  });
 
-    const urlProduto = req.query.url;
+  const $ = cheerio.load(response.data);
 
-    const itemId =
-      extrairItemId(urlProduto);
+  const titulo =
+    $('meta[property="og:title"]').attr("content") ||
+    $("title").text() ||
+    "Produto";
 
-    if (!itemId) {
+  const imagem =
+    $('meta[property="og:image"]').attr("content") ||
+    $('meta[name="twitter:image"]').attr("content") ||
+    "";
 
-      return res.json({
-        erro: true,
-        mensagem:
-          "ID do produto não encontrado."
-      });
+  let preco =
+    $('meta[property="product:price:amount"]').attr("content") ||
+    $('[itemprop="price"]').attr("content") ||
+    "";
 
-    }
-
-    console.log("ITEM:", itemId);
-
-    const response = await axios.get(
-      `https://api.mercadolibre.com/items/${itemId}`,
-      {
-        headers: {
-          Authorization:
-            `Bearer ${accessToken}`
-        }
-      }
-    );
-
-    const item = response.data;
-
-    const produto = {
-
-      titulo: item.title,
-
-      preco: Number(item.price)
-        .toLocaleString(
-          "pt-BR",
-          {
-            style: "currency",
-            currency: "BRL"
-          }
-        ),
-
-      imagem:
-        item.pictures?.[0]?.secure_url ||
-        item.thumbnail,
-
-      link: urlProduto,
-
-      loja: "Mercado Livre",
-
-      desconto: "Oferta"
-
-    };
-
-    let produtos = [];
-
-    if (
-      fs.existsSync("produtos.json")
-    ) {
-
-      produtos = JSON.parse(
-        fs.readFileSync(
-          "produtos.json",
-          "utf8"
-        )
-      );
-
-    }
-
-    produtos.unshift(produto);
-
-    fs.writeFileSync(
-      "produtos.json",
-      JSON.stringify(
-        produtos,
-        null,
-        2
-      )
-    );
-
-    res.json(produto);
-
-  } catch (erro) {
-
-    console.log(
-      erro.response?.data || erro.message
-    );
-
-    res.json({
-      erro: true,
-      mensagem:
-        "Erro ao consultar produto.",
-      detalhes:
-        erro.response?.data || erro.message
+  if (preco) {
+    preco = Number(preco).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
     });
-
+  } else {
+    preco = "Ver preço";
   }
 
-});
+  return { titulo, imagem, preco };
+}
 
-/* =========================
-   LISTAR PRODUTOS
-========================= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.get("/api/produtos", (req, res) => {
-
-  try {
-
-    if (
-      !fs.existsSync("produtos.json")
-    ) {
-
-      return res.json([]);
-
-    }
-
-    const produtos = JSON.parse(
-      fs.readFileSync(
-        "produtos.json",
-        "utf8"
-      )
-    );
-
-    res.json(produtos);
-
-  } catch (erro) {
-
-    res.json([]);
-
-  }
-
+  res.json(lerProdutos());
 });
 
-/* =========================
-   START
-========================= */
+app.post("/api/publicar-produto", async (req, res) => {
+  try {
+    const { link, lojaSlug, categoriaSlug, destaque } = req.body;
+
+    if (!link) {
+      return res.json({ erro: true, mensagem: "Link não enviado." });
+    }
+
+    const dados = await extrairDadosDoLink(link);
+
+    const produto = {
+      titulo: dados.titulo,
+      preco: dados.preco,
+      imagem: dados.imagem,
+      link,
+      loja: nomeLoja(lojaSlug),
+      lojaSlug,
+      categoria: nomeCategoria(categoriaSlug),
+      categoriaSlug,
+      desconto: "Oferta",
+      destaque: destaque === true
+    };
+
+    const produtos = lerProdutos();
+    produtos.unshift(produto);
+    salvarProdutos(produtos);
+
+    res.json({ sucesso: true, produto });
+
+  } catch (erro) {
+    console.log("ERRO AO PUBLICAR:", erro.message);
+    res.json({
+      erro: true,
+      mensagem: "Não foi possível ler esse link automaticamente."
+    });
+  }
+});
 
 app.listen(PORT, () => {
-
-  console.log(
-    `Servidor rodando na porta ${PORT}`
-  );
-
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
