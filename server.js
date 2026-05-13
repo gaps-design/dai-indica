@@ -75,9 +75,14 @@ app.get("/api/gerar-produto", async (req, res) => {
 
     console.log("ITEM ID:", itemId);
 
-    const response = await axios.get(
-      `https://api.mercadolibre.com/items/${itemId}`
-    );
+  const response = await axios.get(
+  `https://api.mercadolibre.com/items/${itemId}`,
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.ACCESS_TOKEN}`
+    }
+  }
+);
 
     const item = response.data;
 
