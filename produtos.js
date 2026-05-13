@@ -1,50 +1,100 @@
 const container = document.querySelector(".products");
 
+const buscas = [
+  "creatina",
+  "garrafa termica",
+  "fone bluetooth",
+  "moda feminina",
+  "beleza feminina"
+];
+
+function formatarPreco(valor) {
+  return Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
 async function carregarProdutosAutomaticos() {
+
   try {
+
     container.innerHTML = "<p>Carregando promoções...</p>";
 
-    const resposta = await fetch("http://localhost:3000/api/produtos");
-    const produtos = await resposta.json();
+    let htmlProdutos = "";
 
-    container.innerHTML = "";
+    for (const termo of buscas) {
 
-    produtos.forEach((produto) => {
-      const card = document.createElement("div");
-      card.className = "product-card";
+      const url =
+        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=5`;
 
-      card.innerHTML = `
-        <div class="discount">${produto.desconto}</div>
+      const resposta = await fetch(url);
 
-        <div class="product-img">
-          <img src="${produto.imagem}" alt="${produto.titulo}">
-        </div>
+      const dados = await resposta.json();
 
-        <small>${produto.loja}</small>
+      if (dados.results) {
 
-        <h3>${produto.titulo}</h3>
+        dados.results.forEach((produto) => {
 
-        <p class="old-price">${produto.categoria}</p>
+          htmlProdutos += `
 
-        <p class="price">${produto.preco}</p>
+            <div class="product-card">
 
-        <a 
-          href="${produto.link}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn-product"
-        >
-          Comprar agora
-        </a>
-      `;
+              <div class="discount">
+                Oferta
+              </div>
 
-      container.appendChild(card);
-    });
+              <div class="product-img">
+                <img src="${produto.thumbnail}" alt="${produto.title}">
+              </div>
+
+              <small>
+                Mercado Livre
+              </small>
+
+              <h3>
+                ${produto.title}
+              </h3>
+
+              <p class="old-price">
+                ${termo}
+              </p>
+
+              <p class="price">
+                ${formatarPreco(produto.price)}
+              </p>
+
+              <a
+                href="${produto.permalink}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-product"
+              >
+                Comprar agora
+              </a>
+
+            </div>
+
+          `;
+
+        });
+
+      }
+
+    }
+
+    container.innerHTML = htmlProdutos;
 
   } catch (erro) {
+
     console.error("Erro ao carregar produtos:", erro);
-    container.innerHTML = "<p>Não foi possível carregar as promoções agora.</p>";
+
+    container.innerHTML = `
+      <p>Não foi possível carregar as promoções agora.</p>
+    `;
+
   }
+
 }
 
 carregarProdutosAutomaticos();
