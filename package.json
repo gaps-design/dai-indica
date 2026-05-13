@@ -1,14 +1,14 @@
-[
-  {
-  "titulo": "",
-  "preco": "R$1299,00",
-  "imagem": "https://produto.mercadolivre.com.br/MLB-6310097450",
-  "link": "https://produto.mercadolivre.com.br/MLB-6310097450",
-  "loja": "Mercado Livre",
-  "lojaSlug": "mercado-livre",
-  "categoria": "Tecnologia",
-  "categoriaSlug": "tecnologia",
-  "desconto": "-30",
-  "destaque": true
+{
+  "name": "dai-indica",
+  "version": "1.0.0",
+  "description": "Site Dai Indica",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
 }
-]
