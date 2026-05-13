@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 10000;
    CONFIG MERCADO LIVRE
 ========================= */
 
-const CLIENT_ID = "SEU_CLIENT_ID";
-const CLIENT_SECRET = "SEU_CLIENT_SECRET";
+const CLIENT_ID = "2373219788729324";
+const CLIENT_SECRET = "1tIpHMVLE8Vv05jRiayaMB90FkU2XAqp";
 
 const REDIRECT_URI =
   "https://www.daiindica.com.br/callback";
