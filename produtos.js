@@ -17,7 +17,7 @@ async function carregarProdutosAutomaticos() {
   try {
     container.innerHTML = "<p>Carregando promoções...</p>";
 
-    const resposta = await fetch("/api/produtos);
+    const resposta = await fetch("/api/produtos");
     const produtos = await resposta.json();
 
     const lojaFiltro = obterParametro("loja");
