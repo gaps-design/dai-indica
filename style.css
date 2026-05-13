@@ -442,3 +442,37 @@ a {
   transform:translateY(-3px);
   opacity:0.9;
 }
+.store-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  width:220px;
+  padding:20px;
+
+  border-radius:18px;
+
+  text-decoration:none;
+  color:white;
+
+  background:linear-gradient(
+    90deg,
+    #ff7aa2,
+    #f0a500
+  );
+
+  font-weight:700;
+
+  transition:0.3s;
+}
+
+.store-card:hover{
+  transform:translateY(-5px);
+}
+
+.store-logo{
+  width:120px;
+  object-fit:contain;
+}
