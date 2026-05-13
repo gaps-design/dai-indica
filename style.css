@@ -68,7 +68,7 @@ a {
       rgba(255, 246, 243, 0.80),
       rgba(255, 246, 243, 0.35)
     ),
-    url('../img/banners/banner.jpg');
+    url('banner.jpg');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center 40px;
