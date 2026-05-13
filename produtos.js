@@ -8,7 +8,7 @@ async function carregarProdutosAutomaticos() {
       <p>Carregando promoções...</p>
     `;
 
-    const resposta = await fetch("/produtos.json");
+    const resposta = await fetch("/api/produtos");
 
     const produtos = await resposta.json();
 
