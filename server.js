@@ -30,23 +30,25 @@ app.get("/", (req, res) => {
 ========================= */
 
 function extrairItemId(url) {
-  const regex = /MLB\d+/;
-  const resultado = url.match(regex);
-  return resultado ? resultado[0] : null;
-}
+  const itemIdNaUrl = url.match(/item_id%3A(MLB\d+)/);
 
-function lerProdutos() {
-  try {
-    if (!fs.existsSync(caminhoProdutos)) {
-      fs.writeFileSync(caminhoProdutos, "[]");
-    }
-
-    const dados = fs.readFileSync(caminhoProdutos, "utf8");
-    return JSON.parse(dados || "[]");
-  } catch (erro) {
-    console.log("Erro ao ler produtos.json:", erro.message);
-    return [];
+  if (itemIdNaUrl) {
+    return itemIdNaUrl[1];
   }
+
+  const wid = url.match(/wid=(MLB\d+)/);
+
+  if (wid) {
+    return wid[1];
+  }
+
+  const ids = url.match(/MLB\d+/g);
+
+  if (ids && ids.length > 1) {
+    return ids[ids.length - 1];
+  }
+
+  return ids ? ids[0] : null;
 }
 
 function salvarProdutos(produtos) {
