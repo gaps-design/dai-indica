@@ -1,27 +1,42 @@
 const express = require("express");
-const axios = require("axios");
 const cors = require("cors");
-const path = require("path");
+const axios = require("axios");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
+
+const PORT = process.env.PORT || 10000;
+
+/* =========================================
+   LINK DE AFILIADO
+========================================= */
 
 function gerarLinkAfiliado(linkOriginal) {
-  // Por enquanto retorna o link normal.
-  // Depois colocamos aqui seu link de afiliado do Mercado Livre.
-  return linkOriginal;
+
+  // MERCADO LIVRE
+  return `${linkOriginal}`;
+
 }
 
+/* =========================================
+   BUSCAR PRODUTOS
+========================================= */
+
 async function buscarProdutos(termo) {
+
   try {
 
     console.log("Buscando:", termo);
 
     const response = await axios.get(
-      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}`
+      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+      }
     );
 
     console.log("Resposta recebida");
@@ -32,15 +47,30 @@ async function buscarProdutos(termo) {
     }
 
     return response.data.results.slice(0, 8).map((item) => ({
+
       titulo: item.title,
-      preco: item.price,
+
+      preco: item.price.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      }),
+
       imagem: item.thumbnail,
-      link: item.permalink
+
+      link: gerarLinkAfiliado(item.permalink),
+
+      loja: "Mercado Livre",
+
+      categoria: termo,
+
+      desconto: "Oferta"
+
     }));
 
   } catch (erro) {
 
     console.log("ERRO COMPLETO:");
+
     console.log(erro.message);
 
     if (erro.response) {
@@ -49,11 +79,16 @@ async function buscarProdutos(termo) {
 
     return [];
   }
+
 }
 
+/* =========================================
+   API PRODUTOS
+========================================= */
+
 app.get("/api/produtos", async (req, res) => {
-  const termos = [
-    "air fryer promoção",
+
+  const pesquisas = [
     "creatina promoção",
     "garrafa térmica",
     "moda feminina promoção",
@@ -65,20 +100,24 @@ app.get("/api/produtos", async (req, res) => {
 
   let produtos = [];
 
-  for (const termo of termos) {
+  for (const termo of pesquisas) {
+
     const resultado = await buscarProdutos(termo);
-    produtos.push(...resultado);
+
+    produtos = produtos.concat(resultado);
+
   }
 
   res.json(produtos);
+
 });
 
-app.get("/api/produtos/:termo", async (req, res) => {
-  const termo = req.params.termo;
-  const produtos = await buscarProdutos(termo);
-  res.json(produtos);
-});
+/* =========================================
+   INICIAR SERVIDOR
+========================================= */
 
 app.listen(PORT, () => {
+
   console.log(`Servidor rodando na porta ${PORT}`);
+
 });
