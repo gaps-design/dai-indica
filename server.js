@@ -17,26 +17,36 @@ function gerarLinkAfiliado(linkOriginal) {
 
 async function buscarProdutos(termo) {
   try {
-    const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(
-      termo
-    )}&limit=8`;
 
-    const response = await axios.get(url);
+    console.log("Buscando:", termo);
 
-    return response.data.results.map((item) => ({
+    const response = await axios.get(
+      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}`
+    );
+
+    console.log("Resposta recebida");
+
+    if (!response.data.results) {
+      console.log("Sem resultados");
+      return [];
+    }
+
+    return response.data.results.slice(0, 8).map((item) => ({
       titulo: item.title,
-      preco: item.price.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      }),
+      preco: item.price,
       imagem: item.thumbnail,
-      link: gerarLinkAfiliado(item.permalink),
-      loja: "Mercado Livre",
-      categoria: termo,
-      desconto: "Oferta"
+      link: item.permalink
     }));
+
   } catch (erro) {
-    console.log(`Erro ao buscar ${termo}:`, erro.response?.data || erro.message);
+
+    console.log("ERRO COMPLETO:");
+    console.log(erro.message);
+
+    if (erro.response) {
+      console.log(erro.response.data);
+    }
+
     return [];
   }
 }
