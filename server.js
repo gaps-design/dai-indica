@@ -91,23 +91,27 @@ app.get("/api/me", async (req, res) => {
   }
 });
 
-app.get("/api/meus-anuncios", async (req, res) => {
+app.get("/api/produtos-publicos", async (req, res) => {
+
   try {
-    if (!accessToken || !userId) {
-      return res.json({ erro: "Sem token/userId. Acesse /login primeiro." });
-    }
 
-    const searchUrl =
-      `https://api.mercadolibre.com/users/${userId}/items/search?limit=20`;
+    const url =
+      "https://api.mercadolibre.com/sites/MLB/search?q=iphone&limit=5";
 
-    console.log("TESTANDO MEUS ANÚNCIOS:", searchUrl);
+    const response = await axios.get(url);
 
-    const searchResponse = await axios.get(searchUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        accept: "application/json"
-      }
+    res.json(response.data.results);
+
+  } catch (erro) {
+
+    res.json({
+      erro: true,
+      detalhes: erro.response?.data || erro.message
     });
+
+  }
+
+});
 
     const ids = searchResponse.data.results || [];
 
