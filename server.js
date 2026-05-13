@@ -4,7 +4,6 @@ const cors = require("cors");
 const path = require("path");
 
 const app = express();
-
 const PORT = process.env.PORT || 10000;
 
 /* =========================
@@ -14,8 +13,7 @@ const PORT = process.env.PORT || 10000;
 const CLIENT_ID = "2373219788729324";
 const CLIENT_SECRET = "1tIpHMVLE8Vv05jRiayaMB90FkU2XAqp";
 
-const REDIRECT_URI =
-  "https://www.daiindica.com.br/callback";
+const REDIRECT_URI = "https://www.daiindica.com.br/callback";
 
 let accessToken = "";
 let refreshToken = "";
@@ -28,12 +26,12 @@ app.use(cors());
 app.use(express.static(__dirname));
 
 /* =========================
-   LOGIN MERCADO LIVRE
+   LOGIN
 ========================= */
 
 app.get("/login", (req, res) => {
   const authUrl =
-    `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+    `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
 
   res.redirect(authUrl);
 });
@@ -66,22 +64,18 @@ app.get("/callback", async (req, res) => {
     accessToken = response.data.access_token;
     refreshToken = response.data.refresh_token;
 
-    console.log("ACCESS TOKEN:");
-    console.log(accessToken);
-
-    console.log("REFRESH TOKEN:");
-    console.log(refreshToken);
+    console.log("TOKEN GERADO COM SUCESSO");
+    console.log("ACCESS TOKEN:", accessToken);
+    console.log("REFRESH TOKEN:", refreshToken);
 
     res.send(`
       <h1>Autorizado com sucesso ✅</h1>
-      <p>Volte para o site.</p>
+      <p>Agora acesse <a href="/api/produtos">/api/produtos</a></p>
     `);
 
   } catch (erro) {
     console.log("ERRO CALLBACK:");
-    console.log(
-      erro.response?.data || erro.message
-    );
+    console.log(erro.response?.data || erro.message);
 
     res.send("Erro ao autenticar.");
   }
@@ -93,7 +87,6 @@ app.get("/callback", async (req, res) => {
 
 async function renovarToken() {
   try {
-
     const response = await axios.post(
       "https://api.mercadolibre.com/oauth/token",
       {
@@ -113,14 +106,11 @@ async function renovarToken() {
     accessToken = response.data.access_token;
     refreshToken = response.data.refresh_token;
 
-    console.log("TOKEN RENOVADO");
+    console.log("TOKEN RENOVADO COM SUCESSO");
 
   } catch (erro) {
-
-    console.log("ERRO RENOVAR TOKEN:");
-    console.log(
-      erro.response?.data || erro.message
-    );
+    console.log("ERRO AO RENOVAR TOKEN:");
+    console.log(erro.response?.data || erro.message);
   }
 }
 
@@ -129,10 +119,10 @@ async function renovarToken() {
 ========================= */
 
 async function buscarProdutos(termo) {
-
   try {
-
-    console.log("Buscando:", termo);
+    console.log("================================");
+    console.log("BUSCANDO:", termo);
+    console.log("TOKEN EXISTE?", accessToken ? "SIM" : "NÃO");
 
     if (!accessToken) {
       console.log("SEM TOKEN");
@@ -140,49 +130,40 @@ async function buscarProdutos(termo) {
     }
 
     const url =
-      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=8`;
+      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=5`;
+
+    console.log("URL:", url);
 
     const response = await axios.get(url, {
       headers: {
-        Authorization: `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
+        accept: "application/json"
       }
     });
 
-    return response.data.results.map((item) => ({
+    console.log("STATUS:", response.status);
+    console.log("TOTAL RESULTADOS:", response.data.results?.length || 0);
 
+    return response.data.results.map((item) => ({
       titulo: item.title,
 
-      preco: item.price.toLocaleString(
-        "pt-BR",
-        {
-          style: "currency",
-          currency: "BRL"
-        }
-      ),
+      preco: item.price.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      }),
 
       imagem: item.thumbnail,
-
       link: item.permalink,
-
       loja: "Mercado Livre",
-
       categoria: termo,
-
       desconto: "Oferta"
-
     }));
 
   } catch (erro) {
-
     console.log("ERRO PRODUTOS:");
+    console.log(erro.response?.data || erro.message);
 
-    console.log(
-      erro.response?.data || erro.message
-    );
-
-    if (
-      erro.response?.status === 401
-    ) {
+    if (erro.response?.status === 401 && refreshToken) {
       await renovarToken();
     }
 
@@ -195,26 +176,19 @@ async function buscarProdutos(termo) {
 ========================= */
 
 app.get("/api/produtos", async (req, res) => {
-
   const buscas = [
     "creatina",
     "garrafa termica",
     "fone bluetooth",
-    "moda feminina promoção",
+    "moda feminina",
     "beleza feminina"
   ];
 
   let produtos = [];
 
   for (const termo of buscas) {
-
-    const resultado =
-      await buscarProdutos(termo);
-
-    produtos = [
-      ...produtos,
-      ...resultado
-    ];
+    const resultado = await buscarProdutos(termo);
+    produtos = produtos.concat(resultado);
   }
 
   res.json(produtos);
@@ -225,9 +199,7 @@ app.get("/api/produtos", async (req, res) => {
 ========================= */
 
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "index.html")
-  );
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
@@ -235,7 +207,5 @@ app.get("/", (req, res) => {
 ========================= */
 
 app.listen(PORT, () => {
-  console.log(
-    `Servidor rodando na porta ${PORT}`
-  );
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
