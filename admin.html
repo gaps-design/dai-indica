@@ -1,79 +1,77 @@
-<input id="titulo" placeholder="Título do produto">
-<input id="preco" placeholder="Preço. Ex: R$ 1.299,00">
-<input id="imagem" placeholder="Link da imagem">
-<input id="link" placeholder="Link do produto / afiliado">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Daí Indica</title>
+  <style>
+    body { font-family: Arial; background:#fff6f3; padding:40px; }
+    .box { max-width:700px; margin:auto; background:white; padding:30px; border-radius:24px; box-shadow:0 10px 30px #0002; }
+    h1 { color:#c94f63; }
+    input, select, button { width:100%; padding:15px; margin-top:12px; border-radius:12px; border:1px solid #ddd; font-size:16px; }
+    button { background:linear-gradient(135deg,#e64f69,#f5a623); color:white; font-weight:bold; border:0; cursor:pointer; }
+    .msg { margin-top:20px; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Painel Daí Indica</h1>
 
-<select id="loja">
-  <option value="mercado-livre">Mercado Livre</option>
-  <option value="shopee">Shopee</option>
-  <option value="magalu">Magalu</option>
-  <option value="natura">Natura</option>
-  <option value="boticario">O Boticário</option>
-</select>
+    <input id="link" placeholder="Cole o link do produto">
 
-<select id="categoria">
-  <option value="tecnologia">Tecnologia</option>
-  <option value="casa">Casa</option>
-  <option value="beleza">Beleza</option>
-  <option value="moda">Moda</option>
-  <option value="infantil">Infantil</option>
-  <option value="mercado">Mercado</option>
-</select>
+    <select id="loja">
+      <option value="mercado-livre">Mercado Livre</option>
+      <option value="shopee">Shopee</option>
+      <option value="magalu">Magalu</option>
+      <option value="amazon">Amazon</option>
+      <option value="natura">Natura</option>
+      <option value="boticario">O Boticário</option>
+    </select>
 
-<input id="desconto" placeholder="Ex: Oferta, -30%, Promoção">
-<label>
-  <input type="checkbox" id="destaque" checked>
-  Aparecer na página inicial
-</label>
+    <select id="categoria">
+      <option value="tecnologia">Tecnologia</option>
+      <option value="casa">Casa</option>
+      <option value="beleza">Beleza</option>
+      <option value="moda">Moda</option>
+      <option value="infantil">Infantil</option>
+      <option value="mercado">Mercado</option>
+    </select>
 
-<button onclick="gerarJSON()">Gerar JSON</button>
+    <label>
+      <input type="checkbox" id="destaque" checked>
+      Aparecer na página inicial
+    </label>
 
-<textarea id="resultado" rows="14"></textarea>
+    <button onclick="publicar()">Publicar produto</button>
 
-<script>
-function nomeLoja(slug) {
-  const lojas = {
-    "mercado-livre": "Mercado Livre",
-    "shopee": "Shopee",
-    "magalu": "Magalu",
-    "natura": "Natura",
-    "boticario": "O Boticário"
-  };
+    <div id="msg" class="msg"></div>
+  </div>
 
-  return lojas[slug] || slug;
-}
+  <script>
+    async function publicar() {
+      const msg = document.getElementById("msg");
+      msg.innerText = "Publicando...";
 
-function nomeCategoria(slug) {
-  const categorias = {
-    "tecnologia": "Tecnologia",
-    "casa": "Casa",
-    "beleza": "Beleza",
-    "moda": "Moda",
-    "infantil": "Infantil",
-    "mercado": "Mercado"
-  };
+      const resposta = await fetch("/api/publicar-produto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          link: document.getElementById("link").value,
+          lojaSlug: document.getElementById("loja").value,
+          categoriaSlug: document.getElementById("categoria").value,
+          destaque: document.getElementById("destaque").checked
+        })
+      });
 
-  return categorias[slug] || slug;
-}
+      const dados = await resposta.json();
 
-function gerarJSON() {
-  const lojaSlug = document.getElementById("loja").value;
-  const categoriaSlug = document.getElementById("categoria").value;
-
-  const produto = {
-    titulo: document.getElementById("titulo").value,
-    preco: document.getElementById("preco").value,
-    imagem: document.getElementById("imagem").value,
-    link: document.getElementById("link").value,
-    loja: nomeLoja(lojaSlug),
-    lojaSlug: lojaSlug,
-    categoria: nomeCategoria(categoriaSlug),
-    categoriaSlug: categoriaSlug,
-    desconto: document.getElementById("desconto").value || "Oferta",
-    destaque: document.getElementById("destaque").checked
-  };
-
-  document.getElementById("resultado").value =
-    JSON.stringify(produto, null, 2);
-}
-</script>
+      if (dados.erro) {
+        msg.style.color = "red";
+        msg.innerText = dados.mensagem;
+      } else {
+        msg.style.color = "green";
+        msg.innerText = "Produto publicado com sucesso!";
+      }
+    }
+  </script>
+</body>
+</html>
