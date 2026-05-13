@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 const CLIENT_ID = process.env.ML_CLIENT_ID || "2373219788729324";
-const CLIENT_SECRET = process.env.1tIpHMVLE8Vv05jRiayaMB90FkU2XAqp;
+const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 
 const REDIRECT_URI = "https://www.daiindica.com.br/callback";
 
