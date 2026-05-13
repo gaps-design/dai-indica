@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin | Daí Indica</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff6f3;
+      color: #2b1b1b;
+      padding: 40px;
+    }
+
+    .box {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      color: #d94f64;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #6d4b4b;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #e64f69, #f5a623);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    .resultado {
+      margin-top: 25px;
+      padding: 20px;
+      background: #fff1f3;
+      border-radius: 16px;
+      display: none;
+    }
+
+    .resultado img {
+      max-width: 180px;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    .erro {
+      color: red;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+    <h1>Painel Daí Indica</h1>
+    <p>Cole o link do Mercado Livre para gerar o card automático.</p>
+
+    <input
+      type="text"
+      id="linkProduto"
+      placeholder="Cole aqui o link do Mercado Livre"
+    />
+
+    <button onclick="gerarProduto()">Gerar produto</button>
+
+    <div id="erro" class="erro"></div>
+
+    <div id="resultado" class="resultado">
+      <h2 id="titulo"></h2>
+      <p><strong>Preço:</strong> <span id="preco"></span></p>
+      <p><strong>Loja:</strong> Mercado Livre</p>
+      <img id="imagem" src="" alt="Produto" />
+      <br><br>
+      <a id="linkFinal" href="#" target="_blank">Abrir oferta</a>
+    </div>
+  </div>
+
+  <script>
+    async function gerarProduto() {
+      const link = document.getElementById("linkProduto").value;
+      const erro = document.getElementById("erro");
+      const resultado = document.getElementById("resultado");
+
+      erro.innerText = "";
+      resultado.style.display = "none";
+
+      if (!link) {
+        erro.innerText = "Cole um link primeiro.";
+        return;
+      }
+
+      try {
+        const resposta = await fetch(`/api/gerar-produto?url=${encodeURIComponent(link)}`);
+        const produto = await resposta.json();
+
+        if (produto.erro) {
+          erro.innerText = produto.mensagem || "Erro ao gerar produto.";
+          return;
+        }
+
+        document.getElementById("titulo").innerText = produto.titulo;
+        document.getElementById("preco").innerText = produto.preco;
+        document.getElementById("imagem").src = produto.imagem;
+        document.getElementById("linkFinal").href = produto.link;
+
+        resultado.style.display = "block";
+
+      } catch (e) {
+        erro.innerText = "Erro ao conectar com o servidor.";
+      }
+    }
+  </script>
+
+</body>
+</html>
