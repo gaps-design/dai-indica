@@ -6,28 +6,16 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-/* =========================
-   CONFIG MERCADO LIVRE
-========================= */
-
-const CLIENT_ID = "2373219788729324";
-const CLIENT_SECRET = "1tIpHMVLE8Vv05jRiayaMB90FkU2XAqp";
+const CLIENT_ID = process.env.ML_CLIENT_ID || "2373219788729324";
+const CLIENT_SECRET = process.env.1tIpHMVLE8Vv05jRiayaMB90FkU2XAqp;
 
 const REDIRECT_URI = "https://www.daiindica.com.br/callback";
 
 let accessToken = "";
 let refreshToken = "";
 
-/* =========================
-   MIDDLEWARE
-========================= */
-
 app.use(cors());
 app.use(express.static(__dirname));
-
-/* =========================
-   LOGIN
-========================= */
 
 app.get("/login", (req, res) => {
   const authUrl =
@@ -35,10 +23,6 @@ app.get("/login", (req, res) => {
 
   res.redirect(authUrl);
 });
-
-/* =========================
-   CALLBACK
-========================= */
 
 app.get("/callback", async (req, res) => {
   const code = req.query.code;
@@ -65,8 +49,7 @@ app.get("/callback", async (req, res) => {
     refreshToken = response.data.refresh_token;
 
     console.log("TOKEN GERADO COM SUCESSO");
-    console.log("ACCESS TOKEN:", accessToken);
-    console.log("REFRESH TOKEN:", refreshToken);
+    console.log("TOKEN EXISTE?", accessToken ? "SIM" : "NÃO");
 
     res.send(`
       <h1>Autorizado com sucesso ✅</h1>
@@ -76,16 +59,13 @@ app.get("/callback", async (req, res) => {
   } catch (erro) {
     console.log("ERRO CALLBACK:");
     console.log(erro.response?.data || erro.message);
-
     res.send("Erro ao autenticar.");
   }
 });
 
-/* =========================
-   RENOVAR TOKEN
-========================= */
-
 async function renovarToken() {
+  if (!refreshToken) return;
+
   try {
     const response = await axios.post(
       "https://api.mercadolibre.com/oauth/token",
@@ -114,9 +94,37 @@ async function renovarToken() {
   }
 }
 
-/* =========================
-   BUSCAR PRODUTOS
-========================= */
+function formatarProduto(item, termo) {
+  const preco =
+    item.price ||
+    item.buy_box_winner?.price ||
+    item.buy_box_winner?.original_price ||
+    0;
+
+  const imagem =
+    item.thumbnail ||
+    item.pictures?.[0]?.url ||
+    item.buy_box_winner?.thumbnail ||
+    "";
+
+  const link =
+    item.permalink ||
+    item.buy_box_winner?.permalink ||
+    `https://www.mercadolivre.com.br/p/${item.id}`;
+
+  return {
+    titulo: item.title || item.name || "Produto Mercado Livre",
+    preco: Number(preco).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }),
+    imagem,
+    link,
+    loja: "Mercado Livre",
+    categoria: termo,
+    desconto: "Oferta"
+  };
+}
 
 async function buscarProdutos(termo) {
   try {
@@ -130,7 +138,7 @@ async function buscarProdutos(termo) {
     }
 
     const url =
-      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=5`;
+      `https://api.mercadolibre.com/products/search?site_id=MLB&q=${encodeURIComponent(termo)}&limit=8`;
 
     console.log("URL:", url);
 
@@ -144,36 +152,21 @@ async function buscarProdutos(termo) {
     console.log("STATUS:", response.status);
     console.log("TOTAL RESULTADOS:", response.data.results?.length || 0);
 
-    return response.data.results.map((item) => ({
-      titulo: item.title,
-
-      preco: item.price.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      }),
-
-      imagem: item.thumbnail,
-      link: item.permalink,
-      loja: "Mercado Livre",
-      categoria: termo,
-      desconto: "Oferta"
-    }));
+    return (response.data.results || []).map((item) =>
+      formatarProduto(item, termo)
+    );
 
   } catch (erro) {
     console.log("ERRO PRODUTOS:");
     console.log(erro.response?.data || erro.message);
 
-    if (erro.response?.status === 401 && refreshToken) {
+    if (erro.response?.status === 401) {
       await renovarToken();
     }
 
     return [];
   }
 }
-
-/* =========================
-   API PRODUTOS
-========================= */
 
 app.get("/api/produtos", async (req, res) => {
   const buscas = [
@@ -194,17 +187,16 @@ app.get("/api/produtos", async (req, res) => {
   res.json(produtos);
 });
 
-/* =========================
-   HOME
-========================= */
+app.get("/api/status", (req, res) => {
+  res.json({
+    servidor: "online",
+    token: accessToken ? "SIM" : "NÃO"
+  });
+});
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
-
-/* =========================
-   START
-========================= */
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
