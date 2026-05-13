@@ -1,42 +1,10 @@
 [
   {
-    "link": "https://meli.la/2QxFjKt",
-    "preco": "R$ 49,99",
-    "desconto": "-28%"
-  },
-  {
-    "link": "https://meli.la/1ibqzZw",
-    "preco": "R$ 37,74",
-    "desconto": "-36%"
-  },
-  {
-    "link": "https://meli.la/2WgXHBK",
-    "preco": "R$ 68,65",
-    "desconto": "-30%"
-  },
-
- {
-    "link": "https://meli.la/15zVyse",
-    "preco": "R$ 45,69",
-    "desconto": ""
-  },
-
- {
-    "link": "https://meli.la/14bJyur",
-    "preco": "R$ 109,90",
-    "desconto": "-50%"
-  },
-
-{
-    "link": "https://meli.la/2Qd9Adx",
-    "preco": "R$ 23,65",
-    "desconto": "-57%"
-  },
-
-{
-    "link": "https://meli.la/2qSqPye",
-    "preco": "R$ 28,61",
-    "desconto": "-28%"
+    "titulo": "Samsung Galaxy A07 256GB 8GB RAM Verde",
+    "preco": "R$ 1.299,00",
+    "imagem": "https://http2.mlstatic.com/D_NQ_NP_2X_699152-MLA85435794392_062025-F.webp",
+    "link": "https://www.mercadolivre.com.br/celular-samsung-galaxy-a07-256gb-8gb-cmera-50mp-verde/p/MLB54963045?pdp_filters=item_id%3AMLB6310097450&matt_tool=38524122#origin=share&sid=share&wid=MLB6310097450&action=copy",
+    "loja": "Mercado Livre",
+    "desconto": "Oferta"
   }
-
 ]
