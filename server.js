@@ -138,8 +138,8 @@ async function buscarProdutos(termo) {
     }
 
     const url =
-      `https://api.mercadolibre.com/products/search?site_id=MLB&q=${encodeURIComponent(termo)}&limit=8`;
-
+`https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=5`;
+    
     console.log("URL:", url);
 
     const response = await axios.get(url, {
