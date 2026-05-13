@@ -30,34 +30,16 @@ app.get("/", (req, res) => {
 ========================= */
 
 function extrairItemId(url) {
-  const itemIdNaUrl = url.match(/item_id%3A(MLB\d+)/);
 
-  if (itemIdNaUrl) {
-    return itemIdNaUrl[1];
-  }
+  const regex = /MLB[-]?\d+/i;
 
-  const wid = url.match(/wid=(MLB\d+)/);
+  const resultado = url.match(regex);
 
-  if (wid) {
-    return wid[1];
-  }
+  if (!resultado) return null;
 
-  const ids = url.match(/MLB\d+/g);
+  return resultado[0].replace("-", "");
 
-  if (ids && ids.length > 1) {
-    return ids[ids.length - 1];
-  }
-
-  return ids ? ids[0] : null;
 }
-
-function salvarProdutos(produtos) {
-  fs.writeFileSync(
-    caminhoProdutos,
-    JSON.stringify(produtos, null, 2)
-  );
-}
-
 /* =========================
    LISTAR PRODUTOS
 ========================= */
