@@ -525,3 +525,9 @@ a {
   font-weight:700;
   color:white;
 }
+.mercado-logo{
+  width:70px;
+  background:white;
+  border-radius:12px;
+  padding:6px;
+}
