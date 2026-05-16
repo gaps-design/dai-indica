@@ -503,3 +503,25 @@ a {
 .shopee{
     background:linear-gradient(135deg,#ff6a00,#ff9f43);
 }
+
+.store-logo{
+  width:120px;
+  height:auto;
+  object-fit:contain;
+  margin-bottom:12px;
+}
+
+.store-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  text-align:center;
+}
+
+.store-card span{
+  font-size:22px;
+  font-weight:700;
+  color:white;
+}
