@@ -92,18 +92,37 @@ async function extrairDadosDoLink(url) {
   let preco =
     $('meta[property="product:price:amount"]').attr("content") ||
     $('[itemprop="price"]').attr("content") ||
+    $('meta[name="twitter:data1"]').attr("content") ||
     "";
 
-  if (preco) {
-    preco = Number(preco).toLocaleString("pt-BR", {
+  let desconto =
+    $(".andes-money-amount__discount").first().text().trim() ||
+    $('[class*="discount"]').first().text().trim() ||
+    "";
+
+  const precoTextoPagina =
+    $(".andes-money-amount__fraction").first().text().trim();
+
+  if (!preco && precoTextoPagina) {
+    preco = precoTextoPagina;
+  }
+
+  if (preco && !String(preco).includes("R$")) {
+    preco = Number(String(preco).replace(/\D/g, "")).toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL"
     });
-  } else {
+  }
+
+  if (!preco || preco === "R$ NaN") {
     preco = "Ver preço";
   }
 
-  return { titulo, imagem, preco };
+  if (!desconto) {
+    desconto = "Oferta";
+  }
+
+  return { titulo, imagem, preco, desconto };
 }
 
 // ===============================
