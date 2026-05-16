@@ -490,14 +490,16 @@ a {
     font-weight:bold;
     transition:.3s;
     box-shadow:0 8px 20px rgba(0,0,0,.12);
-}
-
-.store-card:hover{
-    transform:translateY(-5px);
+    overflow:hidden;
 }
 
 .store-card img{
-    width:90px;
-    height:auto;
+    width:70px;
+    height:70px;
+    object-fit:contain;
     margin-bottom:10px;
+}
+
+.shopee{
+    background:linear-gradient(135deg,#ff6a00,#ff9f43);
 }
