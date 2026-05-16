@@ -182,7 +182,7 @@ app.post("/api/publicar-produto", async (req, res) => {
       lojaSlug,
       categoria: nomeCategoria(categoriaSlug),
       categoriaSlug,
-      desconto: "Oferta",
+      desconto: dados.desconto,
       destaque: destaque === true,
       criadoEm: new Date()
     };
