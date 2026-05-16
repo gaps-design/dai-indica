@@ -476,3 +476,28 @@ a {
   width:120px;
   object-fit:contain;
 }
+
+.store-card{
+    width:220px;
+    height:120px;
+    border-radius:24px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-decoration:none;
+    color:white;
+    font-weight:bold;
+    transition:.3s;
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
+.store-card:hover{
+    transform:translateY(-5px);
+}
+
+.store-card img{
+    width:90px;
+    height:auto;
+    margin-bottom:10px;
+}
