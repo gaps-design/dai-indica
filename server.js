@@ -100,12 +100,17 @@ async function extrairDadosDoLink(url) {
     $('[class*="discount"]').first().text().trim() ||
     "";
 
-  const precoTextoPagina =
-    $(".andes-money-amount__fraction").first().text().trim();
+  const precoAtual =
+  $(".andes-money-amount")
+    .not(".andes-money-amount--previous")
+    .first()
+    .text()
+    .replace(/\s+/g, "")
+    .trim();
 
-  if (!preco && precoTextoPagina) {
-    preco = precoTextoPagina;
-  }
+if (precoAtual) {
+  preco = precoAtual;
+}
 
   if (preco && !String(preco).includes("R$")) {
     preco = Number(String(preco).replace(/\D/g, "")).toLocaleString("pt-BR", {
