@@ -3,16 +3,12 @@ const axios = require("axios");
 const cors = require("cors");
 const path = require("path");
 const cheerio = require("cheerio");
-
 const admin = require("firebase-admin");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ===============================
 // FIREBASE
-// ===============================
-
 const serviceAccount = {
   type: "service_account",
   project_id: "dai-indica",
@@ -32,17 +28,9 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// ===============================
-// MIDDLEWARE
-// ===============================
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
-
-// ===============================
-// FUNÇÕES AUXILIARES
-// ===============================
 
 function nomeLoja(slug) {
   const lojas = {
@@ -53,28 +41,24 @@ function nomeLoja(slug) {
     "natura": "Natura",
     "boticario": "O Boticário"
   };
-
   return lojas[slug] || slug;
 }
 
 function nomeCategoria(slug) {
   const categorias = {
-    "tecnologia": "Tecnologia",
-    "casa": "Casa",
-    "beleza": "Beleza",
-    "moda": "Moda",
-    "infantil": "Infantil",
-    "mercado": "Mercado"
+    tecnologia: "Tecnologia",
+    casa: "Casa",
+    beleza: "Beleza",
+    moda: "Moda",
+    infantil: "Infantil",
+    mercado: "Mercado"
   };
-
   return categorias[slug] || slug;
 }
 
 async function extrairDadosDoLink(url) {
   const response = await axios.get(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0"
-    }
+    headers: { "User-Agent": "Mozilla/5.0" }
   });
 
   const $ = cheerio.load(response.data);
@@ -98,19 +82,19 @@ async function extrairDadosDoLink(url) {
   let desconto =
     $(".andes-money-amount__discount").first().text().trim() ||
     $('[class*="discount"]').first().text().trim() ||
-    "";
+    "Oferta";
 
   const precoAtual =
-  $(".andes-money-amount")
-    .not(".andes-money-amount--previous")
-    .first()
-    .text()
-    .replace(/\s+/g, "")
-    .trim();
+    $(".andes-money-amount")
+      .not(".andes-money-amount--previous")
+      .first()
+      .text()
+      .replace(/\s+/g, "")
+      .trim();
 
-if (precoAtual) {
-  preco = precoAtual;
-}
+  if (precoAtual) {
+    preco = precoAtual;
+  }
 
   if (preco && !String(preco).includes("R$")) {
     preco = Number(String(preco).replace(/\D/g, "")).toLocaleString("pt-BR", {
@@ -123,25 +107,19 @@ if (precoAtual) {
     preco = "Ver preço";
   }
 
-  if (!desconto) {
-    desconto = "Oferta";
-  }
-
   return { titulo, imagem, preco, desconto };
 }
-
-// ===============================
-// ROTAS
-// ===============================
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// LISTAR PRODUTOS
 app.get("/api/produtos", async (req, res) => {
   try {
-    const snapshot = await db.collection("produtos").get();
+    const snapshot = await db
+      .collection("produtos")
+      .orderBy("criadoEm", "desc")
+      .get();
 
     const produtos = [];
 
@@ -153,10 +131,8 @@ app.get("/api/produtos", async (req, res) => {
     });
 
     res.json(produtos);
-
   } catch (erro) {
     console.log("ERRO AO BUSCAR PRODUTOS:", erro);
-
     res.status(500).json({
       erro: true,
       mensagem: "Erro ao carregar produtos"
@@ -164,10 +140,18 @@ app.get("/api/produtos", async (req, res) => {
   }
 });
 
-// PUBLICAR PRODUTO
 app.post("/api/publicar-produto", async (req, res) => {
   try {
-    const { link, lojaSlug, categoriaSlug, destaque } = req.body;
+    const {
+      link,
+      lojaSlug,
+      categoriaSlug,
+      destaque,
+      titulo,
+      preco,
+      desconto,
+      imagem
+    } = req.body;
 
     if (!link) {
       return res.json({
@@ -176,7 +160,25 @@ app.post("/api/publicar-produto", async (req, res) => {
       });
     }
 
-    const dados = await extrairDadosDoLink(link);
+    let dados;
+
+    if (lojaSlug === "shopee") {
+      if (!titulo || !preco || !imagem) {
+        return res.json({
+          erro: true,
+          mensagem: "Para Shopee, preencha título, preço e imagem manualmente."
+        });
+      }
+
+      dados = {
+        titulo,
+        preco,
+        imagem,
+        desconto: desconto || "Oferta"
+      };
+    } else {
+      dados = await extrairDadosDoLink(link);
+    }
 
     const produto = {
       titulo: dados.titulo,
@@ -187,7 +189,7 @@ app.post("/api/publicar-produto", async (req, res) => {
       lojaSlug,
       categoria: nomeCategoria(categoriaSlug),
       categoriaSlug,
-      desconto: dados.desconto,
+      desconto: dados.desconto || "Oferta",
       destaque: destaque === true,
       criadoEm: new Date()
     };
@@ -199,20 +201,15 @@ app.post("/api/publicar-produto", async (req, res) => {
       id: docRef.id,
       produto
     });
-
   } catch (erro) {
     console.log("ERRO AO PUBLICAR:", erro.message);
 
     res.json({
       erro: true,
-      mensagem: "Não foi possível ler esse link automaticamente."
+      mensagem: "Não foi possível publicar esse produto."
     });
   }
 });
-
-// ===============================
-// START SERVER
-// ===============================
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
