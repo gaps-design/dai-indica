@@ -531,4 +531,45 @@ a {
   border-radius:12px;
   padding:6px;
 }
+.stores{
+  display:flex;
+  gap:24px;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:30px;
+}
 
+.store-card{
+  width:260px;
+  height:140px;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+
+  text-decoration:none;
+
+  border-radius:24px;
+
+  background:linear-gradient(135deg,#f58ca8,#f5b323);
+
+  transition:0.3s;
+}
+
+.store-card:hover{
+  transform:translateY(-5px);
+}
+
+.store-logo{
+  width:90px;
+  object-fit:contain;
+  margin-bottom:12px;
+}
+
+.store-card span{
+  color:white;
+  font-size:1.8rem;
+  font-weight:700;
+}
