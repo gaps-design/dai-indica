@@ -9,7 +9,10 @@
     h1 { color:#c94f63; }
     input, select, button { width:100%; padding:15px; margin-top:12px; border-radius:12px; border:1px solid #ddd; font-size:16px; }
     button { background:linear-gradient(135deg,#e64f69,#f5a623); color:white; font-weight:bold; border:0; cursor:pointer; }
+    label { display:block; margin-top:15px; font-weight:bold; }
     .msg { margin-top:20px; font-weight:bold; }
+    .manual { display:none; margin-top:20px; padding:15px; background:#fff1ec; border-radius:18px; }
+    .manual small { color:#777; }
   </style>
 </head>
 <body>
@@ -18,7 +21,7 @@
 
     <input id="link" placeholder="Cole o link do produto">
 
-    <select id="loja">
+    <select id="loja" onchange="verificarLoja()">
       <option value="mercado-livre">Mercado Livre</option>
       <option value="shopee">Shopee</option>
       <option value="magalu">Magalu</option>
@@ -36,6 +39,16 @@
       <option value="mercado">Mercado</option>
     </select>
 
+    <div id="camposManuais" class="manual">
+      <strong>Cadastro manual para Shopee</strong>
+      <small>Use quando a Shopee não deixar puxar os dados automaticamente.</small>
+
+      <input id="tituloManual" placeholder="Título do produto">
+      <input id="precoManual" placeholder="Preço. Ex: R$ 25,84">
+      <input id="descontoManual" placeholder="Desconto. Ex: 77% OFF">
+      <input id="imagemManual" placeholder="URL da imagem do produto">
+    </div>
+
     <label>
       <input type="checkbox" id="destaque" checked>
       Aparecer na página inicial
@@ -47,19 +60,38 @@
   </div>
 
   <script>
+    function verificarLoja() {
+      const loja = document.getElementById("loja").value;
+      const campos = document.getElementById("camposManuais");
+
+      campos.style.display = loja === "shopee" ? "block" : "none";
+    }
+
     async function publicar() {
       const msg = document.getElementById("msg");
+      const loja = document.getElementById("loja").value;
+
+      msg.style.color = "#333";
       msg.innerText = "Publicando...";
+
+      const corpo = {
+        link: document.getElementById("link").value,
+        lojaSlug: loja,
+        categoriaSlug: document.getElementById("categoria").value,
+        destaque: document.getElementById("destaque").checked
+      };
+
+      if (loja === "shopee") {
+        corpo.titulo = document.getElementById("tituloManual").value;
+        corpo.preco = document.getElementById("precoManual").value;
+        corpo.desconto = document.getElementById("descontoManual").value || "Oferta";
+        corpo.imagem = document.getElementById("imagemManual").value;
+      }
 
       const resposta = await fetch("/api/publicar-produto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          link: document.getElementById("link").value,
-          lojaSlug: document.getElementById("loja").value,
-          categoriaSlug: document.getElementById("categoria").value,
-          destaque: document.getElementById("destaque").checked
-        })
+        body: JSON.stringify(corpo)
       });
 
       const dados = await resposta.json();
@@ -70,8 +102,11 @@
       } else {
         msg.style.color = "green";
         msg.innerText = "Produto publicado com sucesso!";
+        document.getElementById("link").value = "";
       }
     }
+
+    verificarLoja();
   </script>
 </body>
 </html>
